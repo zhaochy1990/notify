@@ -1,0 +1,19 @@
+{
+  "name": "@zhaochy/notify",
+  "version": "0.1.0",
+  "description": "Send Windows toast notifications from the CLI",
+  "bin": {
+    "notify": "bin/notify.js"
+  },
+  "main": "src/notify.js",
+  "scripts": {
+    "start": "node bin/notify.js",
+    "demo": "node bin/notify.js --title \"Hello\" --message \"Toast from notify CLI\" --sound Default"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "node-notifier": "^10.0.1"
+  }
+}
