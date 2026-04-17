@@ -1,14 +1,45 @@
+const path = require('path');
+const fs = require('fs');
 const notifier = require('node-notifier');
 
-const VALID_SOUNDS = new Set([
-  'Default', 'IM', 'Mail', 'Reminder', 'SMS',
-  'Looping.Alarm', 'Looping.Alarm2', 'Looping.Alarm3', 'Looping.Alarm4',
-  'Looping.Alarm5', 'Looping.Alarm6', 'Looping.Alarm7', 'Looping.Alarm8',
-  'Looping.Alarm9', 'Looping.Alarm10',
-  'Looping.Call', 'Looping.Call2', 'Looping.Call3', 'Looping.Call4',
-  'Looping.Call5', 'Looping.Call6', 'Looping.Call7', 'Looping.Call8',
-  'Looping.Call9', 'Looping.Call10',
-]);
+const ICON_DIR = path.join(__dirname, '..', 'assets', 'icons');
+const DEFAULT_ICON_NAME = 'bell';
+
+function isBundledName(value) {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    !value.includes('/') &&
+    !value.includes('\\') &&
+    !value.includes('.') &&
+    !path.isAbsolute(value)
+  );
+}
+
+function resolveIcon(icon) {
+  if (icon === false || icon === 'false') return undefined;
+
+  if (!icon) {
+    const fallback = path.join(ICON_DIR, `${DEFAULT_ICON_NAME}.png`);
+    return fs.existsSync(fallback) ? fallback : undefined;
+  }
+
+  if (isBundledName(icon)) {
+    const named = path.join(ICON_DIR, `${icon}.png`);
+    if (fs.existsSync(named)) return named;
+  }
+
+  return path.resolve(icon);
+}
+
+function listBundledIcons() {
+  if (!fs.existsSync(ICON_DIR)) return [];
+  return fs
+    .readdirSync(ICON_DIR)
+    .filter((f) => f.toLowerCase().endsWith('.png'))
+    .map((f) => f.replace(/\.png$/i, ''))
+    .sort();
+}
 
 function send({ title, message, icon, sound, actions, wait, appID } = {}) {
   const payload = {
@@ -17,7 +48,8 @@ function send({ title, message, icon, sound, actions, wait, appID } = {}) {
     appID: appID || 'notify-cli',
   };
 
-  if (icon) payload.icon = icon;
+  const resolvedIcon = resolveIcon(icon);
+  if (resolvedIcon) payload.icon = resolvedIcon;
 
   if (sound === true || sound === 'true') payload.sound = true;
   else if (sound && typeof sound === 'string' && sound !== 'false') payload.sound = sound;
@@ -36,4 +68,4 @@ function send({ title, message, icon, sound, actions, wait, appID } = {}) {
   });
 }
 
-module.exports = { send, VALID_SOUNDS };
+module.exports = { send, resolveIcon, listBundledIcons, ICON_DIR };
